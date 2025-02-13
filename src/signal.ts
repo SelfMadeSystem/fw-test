@@ -14,44 +14,40 @@ export function popTrackStack() {
 
 export const signalSymbol = Symbol("signal");
 
-export function signal<T>(defaultValue: T) {
-  const listeners = new Set<(value: T) => void>();
-  const obj = {
-    subscribe(listener: (value: T) => void) {
-      listeners.add(listener);
-      return () => {
-        listeners.delete(listener);
-      };
-    },
-    emit(value: T) {
-      listeners.forEach((listener) => listener(value));
-    },
-    value: defaultValue,
-    [signalSymbol]: true as const,
-  };
+class Signal<T> {
+  private listeners = new Set<(value: T) => void>();
+  private _value: T;
 
-  const proxy = new Proxy(obj, {
-    get(target, prop) {
-      if (prop === "value") {
-        tracked.add(target as Signal<T>);
-      }
-      if (prop === signalSymbol) {
-        return true;
-      }
-      return target[prop as keyof typeof target];
-    },
-    set(target, prop, value) {
-      target[prop as keyof typeof target] = value;
-      if (prop === "value") {
-        target.emit(value);
-      }
-      return true;
-    },
-  });
+  constructor(defaultValue: T) {
+    this._value = defaultValue;
+  }
 
-  return proxy;
+  subscribe(listener: (value: T) => void) {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
+
+  emit(value: T) {
+    this.listeners.forEach((listener) => listener(value));
+  }
+
+  get value() {
+    tracked.add(this);
+    return this._value;
+  }
+
+  set value(newValue: T) {
+    this._value = newValue;
+    this.emit(newValue);
+  }
+
+  readonly [signalSymbol] = true as const;
 }
 
-export type Signal<T> = ReturnType<typeof signal<T>> & {
-  [signalSymbol]: true;
-};
+export type { Signal };
+
+export function signal<T>(defaultValue: T) {
+  return new Signal<T>(defaultValue);
+}

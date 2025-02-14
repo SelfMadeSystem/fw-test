@@ -98,7 +98,9 @@ function getNodeValue(value: AcceptedNode): ResultNode[] {
         };
         value.subscribe(render);
         render();
-        return [{ node: fragNode, subscribe: newSignal.subscribe }];
+        return [
+          { node: fragNode, subscribe: newSignal.subscribe.bind(newSignal) },
+        ];
       }
       console.error("Invalid value", value);
       return [];

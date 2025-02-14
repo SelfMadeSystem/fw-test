@@ -1,5 +1,5 @@
-let tracked: Set<Signal<any>> = new Set();
-const trackStack: Set<Signal<any>>[] = [];
+let tracked: Set<SignalImpl<any>> = new Set();
+const trackStack: Set<SignalImpl<any>>[] = [];
 
 export function pushTrackStack() {
   trackStack.push(tracked);
@@ -14,7 +14,7 @@ export function popTrackStack() {
 
 export const signalSymbol = Symbol("signal");
 
-class Signal<T> {
+class SignalImpl<T> implements Signal<T> {
   private listeners = new Set<(value: T) => void>();
   private _value: T;
 
@@ -46,8 +46,12 @@ class Signal<T> {
   readonly [signalSymbol] = true as const;
 }
 
-export type { Signal };
+export interface Signal<T> {
+  value: T;
+  subscribe(listener: (value: T) => void): () => void;
+  [signalSymbol]: true;
+}
 
 export function signal<T>(defaultValue: T) {
-  return new Signal<T>(defaultValue);
+  return new SignalImpl<T>(defaultValue);
 }

@@ -6,11 +6,11 @@ type BaseAcceptedNode =
   | number
   | null
   | undefined
-  | (() => AcceptedNode | AcceptedNode[]);
+  | (() => AcceptedNode)
+  | Signal<AcceptedNode>;
 
 export type AcceptedNode =
   | BaseAcceptedNode
-  | Signal<BaseAcceptedNode>
   | AcceptedNode[];
 
 export function tag(
